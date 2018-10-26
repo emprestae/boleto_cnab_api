@@ -1,6 +1,10 @@
 source 'https://rubygems.org'
 
-gem 'brcobranca', git: 'https://github.com/kivanio/brcobranca.git' 
+gem 'aws-sdk-s3'
+gem 'brcobranca', git: 'https://github.com/kivanio/brcobranca.git'
 gem 'grape'
 gem 'puma'
-gem 'aws-sdk'
+
+group :development do
+  gem 'rubocop'
+end
