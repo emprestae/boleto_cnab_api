@@ -13,6 +13,29 @@ module BoletoApi
     clazz.new(values)
   end
 
+  # Verificar quais são os valores que podem ser recuperados das variáveis de ambiente
+  # e quais são obrigatórios e os default de cada campo
+  def self.defaults
+    {
+      # Valores armazenados em variaveis de ambiente
+      agencia: ENV['AGENCIA'],
+      conta_corrente: ENV['CONTA_CORRENTE'],
+      nosso_numero: ENV['NOSSO_NUMERO'],
+      documento_cedente: ENV['DOCUMENTO_CEDENTE'],
+      cedente: ENV['CENDENTE'],
+      cedente_endereco: ENV['CEDENTE_ENDERECO'],
+      carteira: ENV['CARTEIRA'],
+      aceite: ENV['ACEITE'],
+
+      # Valores default hardcoded
+      instrucao1: "Sr. Caixa:",
+      instrucao2: "1) Não aceitar pagamento em cheque;",
+      instrucao3: "2) Não aceitar mais de um pagamento com o mesmo boleto;",
+      instrucao4: "3) Em caso de vencimento no fim de semana ou feriado, aceitar o pagamento até o primeiro dia",
+      instrucao5: "útil após o vencimento.",
+    }
+  end
+
   # Cria um bucket no AWS S3
   def self.create_bucket(boleto)
     s3 = Aws::S3::Resource.new(region: 'us-east-1')
@@ -43,12 +66,13 @@ module BoletoApi
       desc 'Return a bolato image or pdf'
       # Available fields are listed here: https://github.com/kivanio/brcobranca/blob/master/lib/brcobranca/boleto/base.rb
       params do
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
+        # requires :bank, type: String, desc: 'Bank'
+        # requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
         requires :data, type: Hash, desc: 'Boleto data as a stringified json'
       end
       post do
-        boleto = BoletoApi.get_boleto(params[:bank], params[:data])
+        boleto = BoletoApi.get_boleto(ENV['BANCO'], BoletoApi.defaults.merge(params[:data]))
+        
         if boleto.valid?
           bucket = BoletoApi.create_bucket(boleto)
           object = BoletoApi.cloud_upload(boleto, bucket)
